@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
+const VALID_TOKEN = process.env.VALID_TOKEN;
+
 export const maxDuration = 300; // This function can run for a maximum of 5 minutes llm invocation duration time
 
 const CHROMIUM_PATH =
@@ -13,6 +15,7 @@ function removeAllEmptyLines(str: string) {
 }
 
 async function getBrowser() {
+  
   if (process.env.VERCEL_ENV === "production") {
     const chromium = await import("@sparticuz/chromium-min").then(
       (mod) => mod.default
@@ -50,6 +53,12 @@ export async function GET(request: NextRequest) {
 
   if (!url) {
     return new Response("URL query parameter is required", { status: 400 });
+  }
+
+  const headers = request.headers;
+
+  if (headers.get('x-api-token') !== VALID_TOKEN) {
+    return new Response("Unauthorized", { status: 401 });
   }
 
   const browser = await getBrowser();
